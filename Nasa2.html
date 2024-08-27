@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nasa2DMark V2</title>
+    <script src="crafty.js"></script>
+    <style>
+        #container {
+            display: flex;
+        }
+        #render-area {
+            width: 1400px; 
+            height: 900px; 
+            border: 1px solid #39c5bb;
+        }
+        #param-area {
+            width: 20%;
+            padding: 10px;
+            box-sizing: border-box;
+            border-left: 1px solid #39c5bb;
+            overflow: auto;
+        }
+        body {
+            background-color: #39c5bb;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="render-area"></div>
+        <div id="param-area">
+            <p>Current FPS: <span id="current-fps">0</span></p>
+            <p>Average FPS (last 10s): <span id="average-fps">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        Crafty.init(1400, 900, document.getElementById('render-area'));
+
+        let frameTimes = [];
+        let lastTime = Date.now();
+
+        function updateFPS() {
+            let now = Date.now();
+            let delta = now - lastTime;
+            lastTime = now;
+
+            let fps = 1000 / delta;
+            document.getElementById('current-fps').textContent = Math.round(fps);
+
+            frameTimes.push(fps);
+            if (frameTimes.length > 10) frameTimes.shift();
+
+            let averageFPS = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
+            document.getElementById('average-fps').textContent = Math.round(averageFPS);
+        }
+
+        function createComplexScene() {
+            for (let i = 0; i < 500; i++) {
+                Crafty.e('2D, Canvas, Color, Star')
+                    .attr({
+                        x: Math.random() * 1400,
+                        y: Math.random() * 900,
+                        w: 2,
+                        h: 2
+                    })
+                    .color('rgba(255, 255, 255, ' + Math.random() + ')')
+                    .bind('EnterFrame', function() {
+                        this.y -= 1;
+                        if (this.y < 0) this.y = 900;
+                    });
+            }
+
+            for (let i = 0; i < 300; i++) {
+                Crafty.e('2D, Canvas, Color, Twoway, Collision')
+                    .attr({
+                        x: Math.random() * 1400,
+                        y: Math.random() * 900,
+                        w: 20,
+                        h: 20,
+                        vx: Math.random() * 4 - 2,
+                        vy: Math.random() * 4 - 2
+                    })
+                    .color('rgb(' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ')')
+                    .bind('EnterFrame', function() {
+                        this.x += this.vx;
+                        this.y += this.vy;
+
+                        this.x += Math.sin(Date.now() / 1000) * 2;
+                        this.y += Math.cos(Date.now() / 1000) * 2;
+
+                        if (this.x < 0 || this.x > 1380) this.vx *= -1;
+                        if (this.y < 0 || this.y > 880) this.vy *= -1;
+                    });
+            }
+
+            for (let i = 0; i < 50; i++) {
+                Crafty.e('2D, Canvas, Color')
+                    .attr({
+                        x: Math.random() * 1400,
+                        y: Math.random() * 900,
+                        w: 100,
+                        h: 100
+                    })
+                    .color('rgba(0, 150, 200, 0.7)')
+                    .bind('EnterFrame', function() {
+                        this.rotation += 1; 
+                        this.alpha = 0.5 + 0.5 * Math.sin(Date.now() / 1000 + i); 
+                    });
+            }
+
+            for (let i = 0; i < 30; i++) {
+                Crafty.e('2D, Canvas, Color')
+                    .attr({
+                        x: Math.random() * 1400,
+                        y: Math.random() * 900,
+                        w: 80,
+                        h: 80
+                    })
+                    .color('rgba(200, 50, 150, 0.8)')
+                    .bind('EnterFrame', function() {
+                        this.y += 2; 
+                        this.x += Math.sin(Date.now() / 1000 + i) * 3;
+                        if (this.y > 900) {
+                            this.y = -80;
+                            this.x = Math.random() * 1400;
+                        }
+                    });
+            }
+
+            for (let i = 0; i < 100; i++) {
+                Crafty.e('2D, Canvas, Color, Rotation')
+                    .attr({
+                        x: Math.random() * 1400,
+                        y: Math.random() * 900,
+                        w: 30,
+                        h: 30,
+                        scale: Math.random() * 2 + 0.5
+                    })
+                    .color('rgba(' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ', 0.8)')
+                    .bind('EnterFrame', function() {
+                        this.rotation += 2; 
+                        this.scale += Math.sin(Date.now() / 500) * 0.01; 
+                        this.alpha = 0.5 + 0.5 * Math.sin(Date.now() / 500); 
+
+                        if (this.scale > 2) this.scale = 0.5;
+                    });
+            }
+
+            for (let i = 0; i < 2000; i++) {
+                Crafty.e('2D, Canvas, Color, Particle')
+                    .attr({
+                        x: Math.random() * 1400,
+                        y: Math.random() * 900,
+                        w: 5,
+                        h: 5,
+                        vx: Math.random() * 2 - 1,
+                        vy: Math.random() * 2 - 1
+                    })
+                    .color('rgba(' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ', 0.5)')
+                    .bind('EnterFrame', function() {
+                        this.x += this.vx;
+                        this.y += this.vy;
+
+                        this.vy += 0.01;
+
+                        if (this.x < 0 || this.x > 1400 || this.y < 0 || this.y > 900) {
+                            this.destroy();
+                        }
+                    });
+            }
+
+            for (let i = 0; i < 50; i++) {
+                Crafty.e('2D, Canvas, Color')
+                    .attr({
+                        x: Math.random() * 1400,
+                        y: Math.random() * 900,
+                        w: 60,
+                        h: 60
+                    })
+                    .color('rgba(0, 0, 0, 0.5)')
+                    .bind('EnterFrame', function() {
+                        this.alpha = 0.5 + 0.5 * Math.sin(Date.now() / 1000 + i); 
+                        this.scale = 0.5 + Math.abs(Math.sin(Date.now() / 1000 + i)) * 1.5; 
+                    });
+            }
+        }
+
+        createComplexScene();
+
+        Crafty.bind('EnterFrame', updateFPS);
+    </script>
+</body>
+</html>

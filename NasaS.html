@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nasa2DMark V2</title>
+    <script src="crafty.js"></script>
+    <style>
+        #container {
+            display: flex;
+        }
+        #render-area {
+            width: 1400px; 
+            height: 900px; 
+            border: 1px solid #39c5bb;
+        }
+        #param-area {
+            width: 20%;
+            padding: 10px;
+            box-sizing: border-box;
+            border-left: 1px solid #39c5bb;
+            overflow: auto;
+        }
+        body {
+            background-color: #39c5bb;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="render-area"></div>
+        <div id="param-area">
+            <p>Current FPS: <span id="current-fps">0</span></p>
+            <p>Average FPS (last 10s): <span id="average-fps">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        Crafty.init(1400, 900, document.getElementById('render-area'));
+
+        let frameTimes = [];
+        let lastFrameTime = Date.now();
+
+        function updateFPS() {
+            let now = Date.now();
+            let delta = now - lastFrameTime;
+            lastFrameTime = now;
+
+            // Calculate the FPS based on the time since the last frame
+            let fps = 1000 / delta;
+
+            // Update current FPS display
+            document.getElementById('current-fps').textContent = Math.round(fps);
+
+            // Update average FPS over the last 10 seconds
+            frameTimes.push(fps);
+            if (frameTimes.length > 10) frameTimes.shift();
+
+            let averageFPS = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
+            document.getElementById('average-fps').textContent = Math.round(averageFPS);
+        }
+
+        function createComplexScene() {
+            // Create a large number of particles with bouncing behavior
+            for (let i = 0; i < 2000; i++) {
+                Crafty.e('2D, Canvas, Color, Particle')
+                    .attr({
+                        x: Math.random() * 1400,
+                        y: Math.random() * 900,
+                        w: 3,
+                        h: 3,
+                        vx: Math.random() * 4 - 2,
+                        vy: Math.random() * 4 - 2
+                    })
+                    .color('rgba(' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ', 0.5)')
+                    .bind('EnterFrame', function() {
+                        this.x += this.vx;
+                        this.y += this.vy;
+
+                        // Bounce off the edges of the screen
+                        if (this.x < 0 || this.x > 1400) {
+                            this.vx *= -1; // Reverse the x velocity
+                            this.x = Math.max(0, Math.min(this.x, 1400)); // Keep within bounds
+                        }
+                        if (this.y < 0 || this.y > 900) {
+                            this.vy *= -1; // Reverse the y velocity
+                            this.y = Math.max(0, Math.min(this.y, 900)); // Keep within bounds
+                        }
+                    });
+            }
+
+            // Create a large number of rotating and scaling squares
+            for (let i = 0; i < 200; i++) {
+                Crafty.e('2D, Canvas, Color, Rotation')
+                    .attr({
+                        x: Math.random() * 1400,
+                        y: Math.random() * 900,
+                        w: 50,
+                        h: 50,
+                        scale: Math.random() * 2 + 0.5
+                    })
+                    .color('rgba(' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ', 0.8)')
+                    .bind('EnterFrame', function() {
+                        this.rotation += 3; 
+                        this.scale += Math.sin(Date.now() / 1000) * 0.01; 
+                        this.alpha = 0.5 + 0.5 * Math.sin(Date.now() / 500); 
+
+                        if (this.scale > 2) this.scale = 0.5;
+                    });
+            }
+
+            // Create complex shapes with complex animations
+            for (let i = 0; i < 100; i++) {
+                Crafty.e('2D, Canvas, Color')
+                    .attr({
+                        x: Math.random() * 1400,
+                        y: Math.random() * 900,
+                        w: 80,
+                        h: 80
+                    })
+                    .color('rgba(200, 50, 150, 0.8)')
+                    .bind('EnterFrame', function() {
+                        this.y += 2;
+                        this.x += Math.sin(Date.now() / 1000 + i) * 3;
+                        if (this.y > 900) {
+                            this.y = -80;
+                            this.x = Math.random() * 1400;
+                        }
+                    });
+            }
+
+            // Add dynamic text elements to further increase the workload
+            for (let i = 0; i < 50; i++) {
+                Crafty.e('2D, Canvas, Text')
+                    .text(`FPS: ${Math.round(Math.random() * 60)}`)
+                    .textColor('white')
+                    .attr({
+                        x: Math.random() * 1400,
+                        y: Math.random() * 900,
+                        w: 200,
+                        h: 30
+                    })
+                    .bind('EnterFrame', function() {
+                        this.x += Math.sin(Date.now() / 500) * 2;
+                        this.y += Math.cos(Date.now() / 500) * 2;
+                    });
+            }
+        }
+
+        createComplexScene();
+
+        // Ensure FPS calculation is accurate and synchronized
+        function onEnterFrame() {
+            updateFPS();
+            requestAnimationFrame(onEnterFrame);
+        }
+
+        requestAnimationFrame(onEnterFrame);
+    </script>
+</body>
+</html>
